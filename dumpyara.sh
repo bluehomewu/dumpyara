@@ -30,6 +30,11 @@ PWD="$(cd $(dirname ${BASH_SOURCE[0]}); pwd -P)"
 # Create input & working directory if it does not exist
 mkdir -p "${PWD}"/working
 
+# Activate virtual environment if setup.sh created one.
+if [[ -f "${PWD}"/.venv/bin/activate ]]; then
+    source "${PWD}"/.venv/bin/activate
+fi
+
 # GitHub token
 if [[ -n $2 ]]; then
     GIT_OAUTH_TOKEN=$2
