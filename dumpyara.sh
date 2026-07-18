@@ -525,7 +525,7 @@ else
 fi
 
 # Telegram channel
-TG_TOKEN=$(< "$PWD"/.tgtoken)
+[[ -f "$PWD"/.tgtoken ]] && TG_TOKEN=$(< "$PWD"/.tgtoken)
 if [[ -n "$TG_TOKEN" ]]; then
     CHAT_ID="@android_dumps"
     commit_head=$(git log --format=format:%H | head -n 1)
