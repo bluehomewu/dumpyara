@@ -171,11 +171,22 @@ PARTITIONS=(system systemex system_ext system_other vendor cust odm odm_ext oem 
     product_h preas preavs preload
 )
 
+is_raw_mtk_modem_image() {
+    local image=$1
+
+    head -c 1048576 "${image}" 2>/dev/null | strings -n 5 | rg -q '^(md1rom|MOLY\.)'
+}
+
 # Extract the images
 LOGI "Extracting partitions..."
 for partition in "${PARTITIONS[@]}"; do
     # Proceed only if the image from 'PARTITIONS' array exists
     if [[ -f "${partition}".img ]]; then
+        if [[ "${partition}" == "modem" ]] && is_raw_mtk_modem_image "${partition}.img"; then
+            LOGI "Raw MediaTek 'modem.img' detected; keeping image as-is."
+            continue
+        fi
+
         # Try to extract file through '7z'
         ${FSCK_EROFS} --extract="${partition}" "${partition}".img >> /dev/null 2>&1 || {
                 # Try to extract file through '7z'
