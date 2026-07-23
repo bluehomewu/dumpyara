@@ -13,7 +13,16 @@
 
 **Usage**:
 
-      bash dumpyara.sh "<OTAlink> OR <OTA file path>" yourGithubToken
+      bash dumpyara.sh "<OTAlink> OR <OTA file path>" [githubToken] [--repo=public|private]
+
+The repository visibility defaults to `public`. When using the `.githubtoken` file,
+pass the visibility with `--repo`:
+
+      bash dumpyara.sh "<OTAlink> OR <OTA file path>" --repo=private
+
+You can also pass both the token and visibility explicitly:
+
+      bash dumpyara.sh "<OTAlink> OR <OTA file path>" yourGithubToken --repo=private
 
 You can also place your github oauth token in a file called `.githubtoken` and telegram bot token in a file called `.tgtoken` in the root of this repository, if you wish it is ignored by git.  
 Before you start, make sure that dumpyara scripts are mapped to your own org or account, otherwise you'll only dump, not push.  

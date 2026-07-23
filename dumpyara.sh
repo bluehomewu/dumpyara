@@ -27,6 +27,31 @@ LOGF() {
 
 PWD="$(cd $(dirname ${BASH_SOURCE[0]}); pwd -P)"
 
+# Optional arguments
+#   dumpyara.sh <input> [github-token] [--repo=public|private]
+GIT_TOKEN_ARG=""
+REPO_VISIBILITY="public"
+
+for arg in "${@:2}"; do
+    case "${arg}" in
+        --repo=public|--repo=private)
+            REPO_VISIBILITY="${arg#--repo=}"
+            ;;
+        --repo=*)
+            LOGF "Invalid repository option '${arg}'. Use '--repo=public' or '--repo=private'."
+            ;;
+        --*)
+            LOGF "Unknown option '${arg}'."
+            ;;
+        *)
+            if [[ -n "${GIT_TOKEN_ARG}" ]]; then
+                LOGF "Only one GitHub token argument is allowed."
+            fi
+            GIT_TOKEN_ARG="${arg}"
+            ;;
+    esac
+done
+
 # Create input & working directory if it does not exist
 mkdir -p "${PWD}"/working
 
@@ -36,8 +61,8 @@ if [[ -f "${PWD}"/.venv/bin/activate ]]; then
 fi
 
 # GitHub token
-if [[ -n $2 ]]; then
-    GIT_OAUTH_TOKEN=$2
+if [[ -n "${GIT_TOKEN_ARG}" ]]; then
+    GIT_OAUTH_TOKEN="${GIT_TOKEN_ARG}"
 elif [[ -f ".githubtoken" ]]; then
     GIT_OAUTH_TOKEN=$(< .githubtoken)
 else
@@ -538,7 +563,13 @@ if [[ -n $GIT_OAUTH_TOKEN ]]; then
     if [[ -z "$(git config --get user.name)" ]]; then
         git config user.name EdwardWu
     fi
-    curl -s -X POST -H "Authorization: token ${GIT_OAUTH_TOKEN}" -d '{ "name": "'"$repo"'" }' "https://api.github.com/orgs/${ORG}/repos" #create new repo
+    curl -sS -X POST \
+        -H "Authorization: Bearer ${GIT_OAUTH_TOKEN}" \
+        -H "Accept: application/vnd.github+json" \
+        -H "X-GitHub-Api-Version: 2022-11-28" \
+        -H "Content-Type: application/json" \
+        -d '{ "name": "'"$repo"'", "visibility": "'"${REPO_VISIBILITY}"'" }' \
+        "https://api.github.com/orgs/${ORG}/repos" # create new repo
     curl -s -X PUT -H "Authorization: token ${GIT_OAUTH_TOKEN}" -H "Accept: application/vnd.github.mercy-preview+json" -d '{ "names": ["'"$manufacturer"'","'"$platform"'","'"$top_codename"'"]}' "https://api.github.com/repos/${ORG}/${repo}/topics"
     git remote add origin https://github.com/$ORG/"${repo,,}".git
     git checkout -b "$branch"
