@@ -352,20 +352,41 @@ while IFS= read -r -d '' prop_file; do
 done < <(find . -path './.git' -prune -o -type f \( -name 'build.prop' -o -name 'build_*.prop' -o -name '*build*.prop' \) -print0 | sort -z)
 
 prop_value() {
-    local key escaped_key value
+    local key prop_file value
     ((${#PROP_FILES[@]})) || return 1
 
     for key in "$@"; do
-        escaped_key=${key//./\\.}
-        value=$(rg -m1 -INoP --no-messages "^${escaped_key}=\\K.*" "${PROP_FILES[@]}" | head -1)
-        if [[ -n ${value} ]]; then
-            printf '%s\n' "${value}"
-            return 0
-        fi
+        for prop_file in "${PROP_FILES[@]}"; do
+            [[ -f ${prop_file} ]] || continue
+            value=$(awk -v key="${key}" '
+                index($0, key "=") == 1 {
+                    print substr($0, length(key) + 2)
+                    exit
+                }
+            ' "${prop_file}")
+            if [[ -n ${value} ]]; then
+                printf '%s\n' "${value}"
+                return 0
+            fi
+        done
     done
 
     return 1
 }
+
+# Ubuntu's packaged ripgrep can be built without PCRE2.  The legacy lookbehind
+# probes below are optional because every property also has a prop_value()
+# fallback; suppress only those probes instead of flooding stderr and leaving
+# the script unusable on a stock Ubuntu installation.
+if ! printf 'x=ok\n' | command rg -P '(?<=^x=).*' >/dev/null 2>&1; then
+    rg() {
+        local arg
+        for arg in "$@"; do
+            [[ ${arg} == -* && ${arg} == *P* ]] && return 1
+        done
+        command rg "$@"
+    }
+fi
 
 # 'flavor' property (e.g. caiman-user)
 flavor=$(rg -m1 -INoP --no-messages "(?<=^ro.build.flavor=).*" {vendor,system,system/system}/build.prop)
