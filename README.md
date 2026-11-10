@@ -1,33 +1,29 @@
 # dumpyara
 
-**[Telegram channel (feed)](https://t.me/android_dumps)**  
-**[Telegram group for dump requests](https://t.me/dumprequests)**
+從 OTA 網址或本機檔案解出 Android 韌體，再發布到指定的 GitHub 帳號或組織。
+支援 Linux、macOS，首次先執行：
 
-**Script requirements**:
+```bash
+bash setup.sh
+```
 
-      Linux or Mac
-      
-***For setting up requirements***:
+## 使用
 
-      bash setup.sh
+將範例中的來源換成 OTA 網址或檔案路徑：
 
-**Usage**:
+```bash
+bash dumpyara.sh "OTA來源" --repo=private
+```
 
-      bash dumpyara.sh "<OTAlink> OR <OTA file path>" [githubToken] [--repo=public|private]
+預設會建立公開 repo，私有資料請明確使用 `--repo=private`。
+先將腳本的目標帳號或組織改成自己的，否則可能只解出檔案而沒有推送。
 
-The repository visibility defaults to `public`. When using the `.githubtoken` file,
-pass the visibility with `--repo`:
+GitHub Token 放在 `.githubtoken`，Telegram Bot Token 放在 `.tgtoken`；
+兩者都已排除於 Git。也支援把 GitHub Token 當第二個參數，
+但不要將實際 Token 寫入文件或提交。
 
-      bash dumpyara.sh "<OTAlink> OR <OTA file path>" --repo=private
+[支援格式](https://github.com/AndroidDumps/Firmware_extractor/blob/master/extractor.sh#L3)
+由 Firmware_extractor 決定。AndroidDumps 成員原工作流程使用
+`admin:org`、`public_repo` 權限，請依自己的發布目標確認所需權限。
 
-You can also pass both the token and visibility explicitly:
-
-      bash dumpyara.sh "<OTAlink> OR <OTA file path>" yourGithubToken --repo=private
-
-You can also place your github oauth token in a file called `.githubtoken` and telegram bot token in a file called `.tgtoken` in the root of this repository, if you wish it is ignored by git.  
-Before you start, make sure that dumpyara scripts are mapped to your own org or account, otherwise you'll only dump, not push.  
-
-**Supported image types**:  
-check [here](https://github.com/AndroidDumps/Firmware_extractor/blob/master/extractor.sh#L3)  
-
-If you're a member of AndroidDumps org, use a token with following permissions: `admin:org, public_repo`
+上游：[發布頻道](https://t.me/android_dumps)、[需求群組](https://t.me/dumprequests)。
